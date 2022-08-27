@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  nestjs:
+    container_name: nestjs
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: development
+    networks:
+      - api
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${DB_PORT}/${POSTGRES_DB}
+    ports:
+      - ${PORT}:${PORT}
+    command: npm run start:dev
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - api
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+networks:
+ api:
+  driver: bridge
+
+volumes:
+  postgres:
